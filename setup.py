@@ -6,7 +6,7 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 
-VERSION = '`$VERSION`'
+VERSION = '0.1.0'
 
 setup(
     name='cc-feishu',  # package name

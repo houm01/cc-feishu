@@ -2,7 +2,7 @@
 
 VERSION=$1
 
-sed -i 's/replace_this/`$VERSION`/g' setup.py
+# sed -i 's/replace_this/$VERSION/g' setup.py
 
 git add .
 git commit -m "Released v$VERSION"
