@@ -2,10 +2,12 @@
 
 VERSION=$1
 
-git add .
-git commit -m "Released $VERSION"
+sed -i 's/replace_this/$VERSION/g' setup.py
 
-git tag -a $VERSION -m $VERSION
+git add .
+git commit -m "Released v$VERSION"
+
+git tag -a v$VERSION -m v$VERSION
 
 git push --tag
 git push
