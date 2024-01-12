@@ -4,6 +4,7 @@ import os
 import json
 import uuid
 import requests
+import shelve
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from client import BaseClient
@@ -17,6 +18,19 @@ class Endpoint:
 
 
 class AuthEndpoint(Endpoint):
+
+    token_path = '/tmp/.feishu_token'
+
+    def save_token_to_file(self):
+        with shelve.open(self.token_path) as db:
+            db['token'] = self.refresh_access_token()
+            return True
+    
+    def fetch_token_from_file(self):
+        with shelve.open(self.token_path) as db:
+            token = db.get('token')
+            return token
+
     def get_tenant_access_token(self):
         '''
         _summary_
@@ -32,7 +46,6 @@ class AuthEndpoint(Endpoint):
             if resp.tenant_access_token:
                 os.environ['TENANT_ACCESS_TOKEN'] = resp.tenant_access_token
                 return os.environ.get('TENANT_ACCESS_TOKEN')
-
 
     def refresh_access_token(self):
         payload = dict(

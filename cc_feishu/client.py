@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import json
-from collections import namedtuple
 from typing import Optional, Union, Any, Dict, Type, List
 from dataclasses import dataclass
 from .endpoints import (
@@ -29,6 +27,7 @@ class ClientOptions:
     timeout_ms: int = 60_000
     base_url: str = "https://open.feishu.cn/open-apis"
 
+
 @dataclass
 class FeishuResponse:
     code: int
@@ -40,6 +39,7 @@ class FeishuResponse:
     msg: dict
     expire: int
     tenant_access_token: str
+
 
 class BaseClient:
 
@@ -143,12 +143,11 @@ class Client(BaseClient):
         self.client.close()
 
     def _get_token(self):
-        token = os.environ.get('TENANT_ACCESS_TOKEN')
-        if token:
-            return token
+        if self.auth.fetch_token_from_file():
+            return self.auth.fetch_token_from_file()
         else:
-            resp = self.auth.refresh_access_token()
-            return resp
+            self.auth.save_token_to_file()
+            return self.auth.fetch_token_from_file()
 
     def request(self,
                 path: str,
