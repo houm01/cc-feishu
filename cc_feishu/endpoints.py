@@ -66,6 +66,7 @@ class MessageEndpoint(Endpoint):
                   text: str,
                   receive_id: str):
         
+
         format_message_content = json.dumps({ "text": text }, ensure_ascii=False)
 
         payload = {

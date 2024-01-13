@@ -158,13 +158,19 @@ class Client(BaseClient):
                 ) -> Any:
 
         request = self._build_request(method, path, query, body, token=self._get_token())
+        
         try:
-            response = self.client.send(request)
-            return self._parse_response(response)
+            response = self._parse_response(self.client.send(request))
+
+            if 'Invalid access token for authorization' in response.msg:
+                self.auth.save_token_to_file()
+                request = self._build_request(method, path, query, body, token=self._get_token())
+                return self._parse_response(self.client.send(request))
+            else:
+                return response
         except httpx.TimeoutException:
             raise RequestTimeoutError()
-        
-        
+
 
 
 
