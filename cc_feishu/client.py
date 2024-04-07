@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 from typing import Optional, Union, Any, Dict, Type, List
 from dataclasses import dataclass
 from .endpoints import (
     AuthEndpoint,
     MessageEndpoint,
-    ExtensionsEndpoint
+    ExtensionsEndpoint,
+    BitableEndpoint
 )
 
 from .errors import (
@@ -59,6 +59,7 @@ class BaseClient:
 
         self.auth = AuthEndpoint(self)
         self.message = MessageEndpoint(self)
+        self.bitable = BitableEndpoint(self)
         self.extensions = ExtensionsEndpoint(self)
     
     @property
@@ -82,13 +83,14 @@ class BaseClient:
                        path: str,
                        query: Optional[Dict[Any, Any]] = None,
                        body: Optional[Dict[Any, Any]] = None,
+                       files: Optional[Dict[Any, Any]] = None,
                        token: Optional[str] = None) -> Request:
         
         headers = httpx.Headers()
         headers['Authorization'] = f'Bearer {token}'
 
         return self.client.build_request(
-            method=method, url=path, params=query, json=body, headers=headers
+            method=method, url=path, params=query, json=body, headers=headers, files=files
         )
 
     def _parse_response(self, response) -> Any:
@@ -154,17 +156,18 @@ class Client(BaseClient):
                 method: str,
                 query: Optional[Dict[Any, Any]] = None,
                 body: Optional[Dict[Any, Any]] = None,
+                files: Optional[Dict[Any, Any]] = None,
                 token: Optional[str] = None,
                 ) -> Any:
 
-        request = self._build_request(method, path, query, body, token=self._get_token())
+        request = self._build_request(method, path, query, body, files=files, token=self._get_token())
         
         try:
             response = self._parse_response(self.client.send(request))
 
             if 'Invalid access token for authorization' in response.msg:
                 self.auth.save_token_to_file()
-                request = self._build_request(method, path, query, body, token=self._get_token())
+                request = self._build_request(method, path, query, body, files=files, token=self._get_token())
                 return self._parse_response(self.client.send(request))
             else:
                 return response

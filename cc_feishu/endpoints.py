@@ -163,10 +163,46 @@ class MessageEndpoint(Endpoint):
             "msg_type": "interactive",
             "receive_id": receive_id
         }
-        
+
         return self.parent.request(path=f'/im/v1/messages?receive_id_type={receive_id_type}', 
                                    method='POST',
                                    body=payload)
+
+    def send_file(self, file_name, file_path, receive_id):
+        receive_id_type = self.parent.extensions.parse_receive_id_type(receive_id=receive_id)
+        content = {
+            "file_key": self.parent.extensions.upload_file(file_name=file_name, file_path=file_path)
+        }
+        content = json.dumps(content, ensure_ascii=False)
+        payload = {
+            "content": content,
+            "msg_type": "file",
+            "receive_id": receive_id
+        }
+
+        return self.parent.request(path=f'/im/v1/messages?receive_id_type={receive_id_type}', 
+                            method='POST',
+                            body=payload)
+
+class BitableEndpoint(Endpoint):
+    def list_records(self, app_token, table_id):
+        return self.parent.request(path=f'/bitable/v1/apps/{app_token}/tables/{table_id}/records',
+                                   method='GET')
+    
+    def add_record(self, app_token, table_id ,fields):
+        payload = {
+            "fields": fields
+        }
+        return self.parent.request(path=f'/bitable/v1/apps/{app_token}/tables/{table_id}/records',
+                                   method='POST',
+                                   body=payload)
+
+    def query_record(self, app_token, table_id, view_id, payload):
+
+        return self.parent.request(path=f'/bitable/v1/apps/{app_token}/tables/{table_id}/records/search',
+                                   method='POST',
+                                   body=payload)
+
 
 
 class ExtensionsEndpoint(Endpoint):
@@ -180,5 +216,15 @@ class ExtensionsEndpoint(Endpoint):
 
         return receive_id_type
 
+    def upload_file(self, file_name, file_path):
 
+        files = {
+            'file_type': ('', 'stream'),
+            'file_name': ('', file_name),
+            'file': open(file_path, 'rb')
+        }
+
+        return self.parent.request(path=f'/im/v1/files',
+                                   method='POST',
+                                   files=files).data['file_key']
 
